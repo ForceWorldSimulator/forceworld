@@ -1,0 +1,53 @@
+{
+  "tasks": [
+    {
+      "id": "blackboard",
+      "label": "Blackboard wiping",
+      "force": {
+        "video": "assets/force/blackboard-urdf-final.mp4",
+        "poster": "assets/force/blackboard-poster-final.jpg",
+        "caption": "Full sequence · 31.7 s"
+      }
+    },
+    {
+      "id": "unlock",
+      "label": "Unlocking",
+      "force": {
+        "video": "assets/force/unlock-urdf-final.mp4",
+        "poster": "assets/force/unlock-poster-final.jpg",
+        "caption": "Full sequence · 42.8 s"
+      }
+    },
+    {
+      "id": "cucumber",
+      "label": "Cucumber peeling",
+      "force": {
+        "video": "assets/force/cucumber-urdf-final.mp4",
+        "poster": "assets/force/cucumber-poster-final.jpg",
+        "caption": "Full sequence · 146.6 s"
+      }
+    },
+    {
+      "id": "bulb",
+      "label": "Bulb screwing",
+      "force": {
+        "video": "assets/force/bulb-urdf-1783574121.mp4",
+        "poster": "assets/force/bulb-poster-1783574121.jpg",
+        "caption": "Full sequence · 56.0 s"
+      }
+    }
+  ],
+  "pusht": {
+    "caption": "",
+    "videos": [
+      {
+        "label": "Vision only",
+        "src": "assets/pusht/ep03-real-main-clean.mp4"
+      },
+      {
+        "label": "ForceWorld",
+        "src": "assets/pusht/ep03-target-main-clean.mp4"
+      }
+    ]
+  }
+}
