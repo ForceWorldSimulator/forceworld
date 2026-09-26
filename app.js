@@ -1,9 +1,14 @@
 'use strict';
-const examples={"tasks":[{"id":"blackboard","label":"Blackboard wiping","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/blackboard-urdf-final-clean.mp4","poster":"assets/force/blackboard-poster-final-clean.jpg","caption":"Full sequence · 31.7 s"}},{"id":"unlock","label":"Unlocking","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/unlock-urdf-final-clean.mp4","poster":"assets/force/unlock-poster-final-clean.jpg","caption":"Full sequence · 42.8 s"}},{"id":"cucumber","label":"Cucumber peeling","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/cucumber-urdf-final-clean.mp4","poster":"assets/force/cucumber-poster-final-clean.jpg","caption":"Full sequence · 146.6 s"}},{"id":"bulb","label":"Bulb screwing","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/bulb-urdf-1783574121-clean.mp4","poster":"assets/force/bulb-poster-1783574121-clean.jpg","caption":"Full sequence · 56.0 s"}}],"pusht":{"caption":"","videos":[{"label":"Vision only","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-real-first20.mp4"},{"label":"ForceWorld","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-target-first20.mp4"}]}};
+const examples={"tasks":[{"id":"blackboard","label":"Blackboard wiping","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/blackboard-urdf-final-clean.mp4","poster":"https://forceworldsimulator.github.io/forceworld/assets/force/blackboard-poster-final-clean.jpg","caption":"Full sequence · 31.7 s"}},{"id":"unlock","label":"Unlocking","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/unlock-urdf-final-clean.mp4","poster":"https://forceworldsimulator.github.io/forceworld/assets/force/unlock-poster-final-clean.jpg","caption":"Full sequence · 42.8 s"}},{"id":"cucumber","label":"Cucumber peeling","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/cucumber-urdf-final-clean.mp4","poster":"https://forceworldsimulator.github.io/forceworld/assets/force/cucumber-poster-final-clean.jpg","caption":"Full sequence · 146.6 s"}},{"id":"bulb","label":"Bulb screwing","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/bulb-urdf-1783574121-clean.mp4","poster":"https://forceworldsimulator.github.io/forceworld/assets/force/bulb-poster-1783574121-clean.jpg","caption":"Full sequence · 56.0 s"}}],"pusht":{"caption":"","videos":[{"label":"Vision only","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-real-first20.mp4"},{"label":"ForceWorld","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-target-first20.mp4"}]}};
+function loadVideo(video){
+ if(video.dataset.poster){video.poster=video.dataset.poster;delete video.dataset.poster;}
+ if(video.dataset.src){video.preload='auto';video.src=video.dataset.src;delete video.dataset.src;video.load();}
+}
+const sectionVisible=element=>element.closest('section')?.dataset.mediaVisible==='true';
 const forceVideo=document.querySelector('#force-video');
 const forceCaption=document.querySelector('#force-caption');
 const forceEmpty=document.querySelector('#force-empty');
-function showForce(task){document.querySelector("#force-task-label").textContent=task.label;forceVideo.pause();const ready=Boolean(task.force);forceVideo.closest('figure').hidden=!ready;forceEmpty.hidden=ready;if(ready){forceVideo.src=task.force.video;forceVideo.poster=task.force.poster||'';forceVideo.setAttribute('aria-label',task.label+' prediction and URDF joint torque visualization');forceCaption.textContent=task.force.caption;forceVideo.play().catch(()=>{});}else{forceVideo.removeAttribute('src');forceVideo.load();document.querySelector('#force-empty-title').textContent=task.label;}}
+function showForce(task){document.querySelector("#force-task-label").textContent=task.label;forceVideo.pause();const ready=Boolean(task.force);forceVideo.closest('figure').hidden=!ready;forceEmpty.hidden=ready;if(ready){delete forceVideo.dataset.src;delete forceVideo.dataset.poster;forceVideo.src=task.force.video;forceVideo.poster=task.force.poster||'';forceVideo.setAttribute('aria-label',task.label+' prediction and URDF joint torque visualization');forceCaption.textContent=task.force.caption;if(sectionVisible(forceVideo))forceVideo.play().catch(()=>{});}else{forceVideo.removeAttribute('src');forceVideo.load();document.querySelector('#force-empty-title').textContent=task.label;}}
 function selectTask(button){if(!examples)return;const group=button.dataset.group;document.querySelectorAll(`[data-group="${group}"]`).forEach(t=>{const selected=t===button;t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;});document.querySelector('#'+group+'-panel').setAttribute('aria-labelledby',button.id);const task=examples.tasks.find(t=>t.id===button.dataset.task);showForce(task);}
 for(const group of ['force']){const tabs=[...document.querySelectorAll(`[data-group="${group}"]`)];tabs.forEach((tab,i)=>{tab.addEventListener('click',()=>selectTask(tab));tab.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight')next=(i+1)%tabs.length;if(e.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;if(e.key==='Home')next=0;if(e.key==='End')next=tabs.length-1;if(next!==undefined){e.preventDefault();tabs[next].focus();selectTask(tabs[next]);}});});}
 const comparisonControllers=[];
@@ -16,7 +21,8 @@ function setupComparison(prefix,videoSelector){
  const seek=document.querySelector('#'+prefix+'-seek');
  const output=document.querySelector('#'+prefix+'-time');
  let wanted=false,starting=false,generation=0,scrubbing=false;
- const active=()=>!panel||!panel.hidden;
+ let activated=false;
+ const active=()=>sectionVisible(videos[0])&&(!panel||!panel.hidden);
  const duration=()=>videos.every(v=>Number.isFinite(v.duration)&&v.duration>0)?Math.min(...videos.map(v=>v.duration)):0;
  const clock=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
  function timeline(){const d=duration();seek.disabled=!d;if(!scrubbing)seek.value=d?videos[0].currentTime/d*1000:0;output.textContent=clock(videos[0].currentTime)+' / '+clock(d);}
@@ -36,7 +42,7 @@ function setupComparison(prefix,videoSelector){
   button.textContent='Pause together';status.textContent='';
  }
  function play(restart=false){
-  hold();wanted=true;button.textContent='Pause together';
+  activated=true;hold();wanted=true;button.textContent='Pause together';videos.forEach(loadVideo);
   const d=duration();align(restart||(d&&videos[0].currentTime>=d-.1)?0:videos[0].currentTime);
   videos.forEach(v=>{v.preload='auto';});resume();
  }
@@ -67,7 +73,7 @@ function setupComparison(prefix,videoSelector){
   const delta=videos[0].currentTime-follower.currentTime;
   if(Math.abs(delta)>.25){hold();align(videos[0].currentTime);resume();}
  });
- comparisonControllers.push({panel,play,pause});timeline();
+ comparisonControllers.push({panel,element:videos[0],play,pause,suspend:hold,activate(){if(!active())return;if(!activated)play();else if(wanted)resume();}});timeline();
 }
 setupComparison("pusht",".pusht-video");
 setupComparison("policy",".policy-video");
@@ -91,12 +97,20 @@ const evalButtons=[...document.querySelectorAll('[data-eval-task],[data-eval-out
 let evaluationTask='blackboard',evaluationOutcome='success';
 function refreshEvaluation(){
  document.querySelectorAll('[data-eval-panel]').forEach(panel=>{const hide=panel.dataset.evalPanel!==evaluationTask+'-'+evaluationOutcome;if(hide)comparisonControllers.find(c=>c.panel===panel)?.pause();panel.hidden=hide;});
- comparisonControllers.filter(c=>c.panel&&!c.panel.hidden).forEach(c=>c.play());
+ comparisonControllers.filter(c=>c.panel&&!c.panel.hidden&&sectionVisible(c.element)).forEach(c=>c.play());
  evalButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.evalTask?button.dataset.evalTask===evaluationTask:button.dataset.evalOutcome===evaluationOutcome)));
 }
 evalButtons.forEach(button=>button.addEventListener('click',()=>{if(button.dataset.evalTask)evaluationTask=button.dataset.evalTask;else evaluationOutcome=button.dataset.evalOutcome;refreshEvaluation();}));
 document.querySelectorAll('[data-hero-task]').forEach(link=>link.addEventListener('click',()=>{const button=document.querySelector('#force-'+link.dataset.heroTask);selectTask(button);}));
 refreshEvaluation();
 
-forceVideo.muted=true;forceVideo.defaultMuted=true;forceVideo.autoplay=true;forceVideo.loop=true;forceVideo.play().catch(()=>{});
-comparisonControllers.filter(c=>!c.panel).forEach(c=>c.play());
+forceVideo.muted=true;forceVideo.defaultMuted=true;forceVideo.autoplay=false;forceVideo.loop=true;if(sectionVisible(forceVideo))forceVideo.play().catch(()=>{});
+function setMediaVisibility(section,visible){
+ section.dataset.mediaVisible=String(visible);
+ if(section.contains(forceVideo)){if(visible){loadVideo(forceVideo);forceVideo.play().catch(()=>{});}else forceVideo.pause();}
+ comparisonControllers.filter(c=>section.contains(c.element)).forEach(c=>visible?c.activate():c.suspend());
+}
+if('IntersectionObserver' in window){
+ const mediaObserver=new IntersectionObserver(entries=>entries.forEach(entry=>setMediaVisibility(entry.target,entry.isIntersecting)),{rootMargin:'180px 0px'});
+ document.querySelectorAll('#force-prediction,#evaluation,#pusht').forEach(section=>mediaObserver.observe(section));
+}else document.querySelectorAll('#force-prediction,#evaluation,#pusht').forEach(section=>setMediaVisibility(section,true));
