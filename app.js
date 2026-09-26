@@ -1,5 +1,5 @@
 'use strict';
-const examples={"tasks":[{"id":"blackboard","label":"Blackboard wiping","force":{"video":"assets/force/blackboard-urdf-final.mp4","poster":"assets/force/blackboard-poster-final.jpg","caption":"Full sequence · 31.7 s"}},{"id":"unlock","label":"Unlocking","force":{"video":"assets/force/unlock-urdf-final.mp4","poster":"assets/force/unlock-poster-final.jpg","caption":"Full sequence · 42.8 s"}},{"id":"cucumber","label":"Cucumber peeling","force":{"video":"assets/force/cucumber-urdf-final.mp4","poster":"assets/force/cucumber-poster-final.jpg","caption":"Full sequence · 146.6 s"}},{"id":"bulb","label":"Bulb screwing","force":{"video":"assets/force/bulb-urdf-1783574121.mp4","poster":"assets/force/bulb-poster-1783574121.jpg","caption":"Full sequence · 56.0 s"}}],"pusht":{"caption":"","videos":[{"label":"Vision only","src":"assets/pusht/ep03-real-first20.mp4"},{"label":"ForceWorld","src":"assets/pusht/ep03-target-first20.mp4"}]}};
+const examples={"tasks":[{"id":"blackboard","label":"Blackboard wiping","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/blackboard-urdf-final.mp4","poster":"assets/force/blackboard-poster-final.jpg","caption":"Full sequence · 31.7 s"}},{"id":"unlock","label":"Unlocking","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/unlock-urdf-final.mp4","poster":"assets/force/unlock-poster-final.jpg","caption":"Full sequence · 42.8 s"}},{"id":"cucumber","label":"Cucumber peeling","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/cucumber-urdf-final.mp4","poster":"assets/force/cucumber-poster-final.jpg","caption":"Full sequence · 146.6 s"}},{"id":"bulb","label":"Bulb screwing","force":{"video":"https://forceworldsimulator.github.io/forceworld/assets/force/bulb-urdf-1783574121.mp4","poster":"assets/force/bulb-poster-1783574121.jpg","caption":"Full sequence · 56.0 s"}}],"pusht":{"caption":"","videos":[{"label":"Vision only","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-real-first20.mp4"},{"label":"ForceWorld","src":"https://forceworldsimulator.github.io/forceworld/assets/pusht/ep03-target-first20.mp4"}]}};
 const forceVideo=document.querySelector('#force-video');
 const forceCaption=document.querySelector('#force-caption');
 const forceEmpty=document.querySelector('#force-empty');
@@ -15,16 +15,16 @@ function setupComparison(prefix,videoSelector){
  const status=document.querySelector('#'+prefix+'-status');
  const seek=document.querySelector('#'+prefix+'-seek');
  const output=document.querySelector('#'+prefix+'-time');
- let wanted=false,starting=false,generation=0;
+ let wanted=false,starting=false,generation=0,scrubbing=false;
  const active=()=>!panel||!panel.hidden;
  const duration=()=>videos.every(v=>Number.isFinite(v.duration)&&v.duration>0)?Math.min(...videos.map(v=>v.duration)):0;
  const clock=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
- function timeline(){const d=duration();seek.disabled=!d;seek.value=d?videos[0].currentTime/d*1000:0;output.textContent=clock(videos[0].currentTime)+' / '+clock(d);}
+ function timeline(){const d=duration();seek.disabled=!d;if(!scrubbing)seek.value=d?videos[0].currentTime/d*1000:0;output.textContent=clock(videos[0].currentTime)+' / '+clock(d);}
  function hold(){generation++;starting=false;videos.forEach(v=>v.pause());}
  function pause(){wanted=false;hold();button.textContent='Play together';status.textContent='';}
  function align(t){videos.forEach(v=>{if(v.readyState>=1&&Math.abs(v.currentTime-t)>.06)v.currentTime=t;});timeline();}
  async function resume(){
-  if(!wanted||!active()||starting)return;
+  if(!wanted||!active()||starting||scrubbing)return;
   if(videos.some(v=>v.readyState<3||v.seeking)){status.textContent='Loading both videos…';return;}
   if(videos.every(v=>!v.paused))return;
   starting=true;const request=++generation;
@@ -43,7 +43,13 @@ function setupComparison(prefix,videoSelector){
  button.addEventListener('click',()=>wanted?pause():play());
  document.querySelector('#'+prefix+'-restart').addEventListener('click',()=>play(true));
  document.querySelector('#'+prefix+'-speed').addEventListener('change',e=>videos.forEach(v=>v.playbackRate=Number(e.target.value)));
- seek.addEventListener('input',()=>{const run=wanted;hold();align(Number(seek.value)/1000*duration());if(run)resume();});
+ function finishSeek(){if(!scrubbing)return;scrubbing=false;timeline();if(wanted)resume();}
+ seek.addEventListener('pointerdown',()=>{scrubbing=true;hold();});
+ seek.addEventListener('input',()=>{const target=Number(seek.value)/1000*duration();hold();align(target);if(!scrubbing&&wanted)resume();});
+ seek.addEventListener('change',finishSeek);
+ window.addEventListener('pointerup',finishSeek);
+ window.addEventListener('pointercancel',finishSeek);
+ seek.addEventListener('blur',finishSeek);
  videos.forEach(v=>{
   // Shared controls prevent either side from playing independently.
   v.controls=false;v.muted=true;v.defaultMuted=true;v.playsInline=true;
