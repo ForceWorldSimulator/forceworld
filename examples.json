@@ -42,11 +42,11 @@
     "videos": [
       {
         "label": "Vision only",
-        "src": "assets/pusht/ep03-real-main-clean.mp4"
+        "src": "assets/pusht/ep03-real-first20.mp4"
       },
       {
         "label": "ForceWorld",
-        "src": "assets/pusht/ep03-target-main-clean.mp4"
+        "src": "assets/pusht/ep03-target-first20.mp4"
       }
     ]
   }
